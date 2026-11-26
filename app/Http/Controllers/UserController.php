@@ -18,10 +18,11 @@ class UserController extends Controller
         return view('auth.profile',compact('user'));
     }
 
-    public function update(Request $request, $id){
-        $user = User::find($id);
+    public function update(Request $request){
+        if(!$user = Auth::user())
+            return response()->json(['message' => 'Forbidden Operation'], 403);
 
-        $user->update($request->all());
+        $user->update($request->only(['name', 'email']));
 
         return back()->with('message','User updated');
     }
@@ -65,11 +66,7 @@ class UserController extends Controller
         $newImage = $request->file('avatar');
         // calculate hash
 
-        // UNSECURE with md5
-        $newImageHash = md5_file($newImage);
-
-        // SECURE with sha56
-        // $newImageHash = hash_file('sha256', $newImage);
+        $newImageHash = hash_file('sha256', $newImage);
     
         // compare hash
         if($newImageHash == $user->avatar){
@@ -93,7 +90,12 @@ class UserController extends Controller
     }
 
     public function download(Request $request) {
-        return response()->download(storage_path('app/private/'.$request->get('filename')));
+        $filename = basename($request->get('filename'));
+        $path = storage_path('app/private/'.$filename);
+        if (!file_exists($path)) {
+            return back()->with('message', 'File not found');
+        }
+        return response()->download($path);
     }
 
     public function upload(Request $request)
@@ -121,65 +123,25 @@ class UserController extends Controller
     
     
     $file = $request->file('file');
-    
-    // UNSECURE
-    
+
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    $extension = strtolower($file->getClientOriginalExtension());
+    $mimeType = $file->getMimeType();
+
+    if (!in_array($extension, $allowedExtensions) || !in_array($mimeType, $allowedMimeTypes)){
+        return back()->withErrors('File type not allowed');
+    }
+
     $filename = $file->getClientOriginalName();
-    
-    $file->move($path, $filename);
-    
+    $fileuid = uniqid().'.'.$extension;
+    $path = $file->storeAs("docs/users/{$user->id}", $fileuid, 'local');
+
     File::create([
-        'name'=> $filename,
-        'user_id'=>$user->id
-    
+        'name' => $filename,
+        'user_id' => $user->id,
+        'uid' => $fileuid,
     ]);
-    
-    
-    // SECURE
-    
-    
-    
-    // Definisci le estensioni e i MIME type permessi
-    
-    // $allowedExtensions= ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
-    
-    // $allowedMimeTypes= ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
-    
-    // $file =$request->file('file');
-    
-    // $extension = strtolower($file->getClientOriginalExtension());
-    
-    // $mimeType = $file->getMimeType();
-    
-    // if (!in_array($extension, $allowedExtensions) || !in_array($mimeType, $allowedMimeTypes)){
-    
-    // return back()->withErrors('File type not allowed');
-    
-    // }
-    
-    //  $filename = $file->getClientOriginalName();
-    
-    // // Genera un nome sicuro
-    
-    // $fileuid = uniqid().'.'.$extension;
-    
-    // // Salva in una cartella non pubblica (storage/app/private/docs/users/($user->id})
-    
-    // $path= $file->storeAs("docs/users/{$user->id}", $fileuid, 'local');
-    
-    
-    
-    //// Salva il record nel DB
-    
-    // File::create([
-    
-    // 'name' => $filename,
-    
-    // 'user_id' => $user->id,
-    
-    // 'uid'=> $fileuid,
-    
-    // ]);
     
     return back()->withMessage("Upload successful");
     }

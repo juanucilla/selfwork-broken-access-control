@@ -30,7 +30,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/articles/{article}/delete', [ArticleController::class, 'destroy'])->name('articles.destroy');
     Route::get('/profile',[UserController::class,'profile'])->name('profile');
 
-    Route::patch('/users/{id}/update',[UserController::class,'update'])->name('users.update');
+    Route::patch('/users/update',[UserController::class,'update'])->name('users.update');
     Route::post('/users/name/change',[UserController::class,'changeName'])->name('change.name');
     Route::get('/users/email/change',[UserController::class,'changeEmail'])->name('change.email');
     Route::post('/users/img/change',[UserController::class,'changeImg'])->name('change.img');
@@ -45,7 +45,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/users/{id}/toggle', [AdminController::class,'toggleUsersAdmin'])->name('admin.users.toggle');
         Route::get('articles/{id}/toggle',[AdminController::class,'toggleArticleStatus'])->name('admin.articles.toggle');
 
-        // UNSECURE - VULNERABILE A SSRF: fetch dati esterni da URL arbitrario
         Route::get('/fetch-external-data', [AdminController::class,'fetchExternalData'])->name('admin.fetch-external-data');
         // Route::post('/users/{id}/toggle', [AdminController::class,'toggleUsersAdmin'])->name('admin.users.toggle');
         // Route::post('/articles/{id}/toggle',[AdminController::class,'toggleArticleStatus'])->name('admin.articles.toggle');

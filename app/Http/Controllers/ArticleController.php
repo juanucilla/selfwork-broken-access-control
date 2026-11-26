@@ -12,11 +12,8 @@ class ArticleController extends Controller
 {
     public function index(Request $request, HtmlFilterService $htmlFilterService)
     {
-        // UNSECURE
         $articles = Article::latest()->where('published',true)->take(6)->get();
-
-        // SECURE
-        //$articles = $htmlFilterService->filterHtmlCollectionByField($articles,'content');
+        $articles = $htmlFilterService->filterHtmlCollectionByField($articles,'content');
         if ($request->wantsJson()) {
             return response()->json($articles);
         }
@@ -33,39 +30,25 @@ class ArticleController extends Controller
         return view('articles.index',compact('articles'));
     }
     
-    // UNSECURE
-    public function show(Article $article, Request $request)
+    public function show(Article $article, Request $request, HtmlFilterService $htmlFilterService)
     {
+        $article->content = $htmlFilterService->filterHtml($article->content);
         if ($request->wantsJson()) {
             return response()->json($article);
         }
-        
+
         return view('articles.show', compact('article'));
     }
-
-    // SECURE
-    // public function show(Article $article, Request $request,HtmlFilterService $htmlFilterService)
-    // {
-    //     $article->content = $htmlFilterService->filterHtml($article->content);
-    //     if ($request->wantsJson()) {
-    //         return response()->json($article);
-    //     }
-        
-    //     return view('articles.show', compact('article'));
-    // }
     
     public function create()
     {
         return view('articles.create');
     }
     
-    public function store(Request $request/*,HtmlFilterService $htmlFilterService*/)
+    public function store(Request $request, HtmlFilterService $htmlFilterService)
     {
-        // UNSECURE
         $articleData = $request->all();
-
-        // SECURE
-        //$articleData['content'] = $htmlFilterService->filterHtml($articleData['content']);
+        $articleData['content'] = $htmlFilterService->filterHtml($articleData['content']);
         
         if(!key_exists('user_id',$articleData)){
             $articleData['user_id']= Auth::id();
@@ -85,13 +68,10 @@ class ArticleController extends Controller
         return view('articles.edit',compact('article'));
     }
 
-    public function update(Request $request, Article $article/*,HtmlFilterService $htmlFilterService*/)
+    public function update(Request $request, Article $article, HtmlFilterService $htmlFilterService)
     {
-        // UNSECURE
         $articleData = $request->all();
-
-        // SECURE
-        //$articleData['content'] = $htmlFilterService->filterHtml($articleData['content']);
+        $articleData['content'] = $htmlFilterService->filterHtml($articleData['content']);
 
         $article->update($articleData);
         
