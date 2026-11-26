@@ -11,21 +11,12 @@ use Intervention\Image\Facades\Image as Image;
 
 class UserController extends Controller
 {
-    // UNSECURE
-    public function show($id)
-	{
-		$user = User::findOrFail($id);
+    public function profile(){
+        if(!$user = Auth::user())
+        return response()->json(['message' => 'Forbidden Operation'], 403);
 
         return view('auth.profile',compact('user'));
-	}
-
-    // SECURE
-    // public function profile(){
-    //     if(!$user = Auth::user())
-    //     return response()->json(['message' => 'Forbidden Operation'], 403);
-        
-    //     return view('auth.profile',compact('user'));
-    // }
+    }
 
     public function update(Request $request, $id){
         $user = User::find($id);
